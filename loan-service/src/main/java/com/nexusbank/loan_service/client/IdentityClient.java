@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.nexusbank.loan_service.dto.UserDto;
 
-@FeignClient(name = "identity-service", url = "http://localhost:8080")
+@FeignClient(name = "identity-service")
 public interface IdentityClient {
 
     @GetMapping("/api/users/me")
