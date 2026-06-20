@@ -1,23 +1,18 @@
 package com.nexusbank.loan_service.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-import lombok.Builder;
-import lombok.Data;
+public record LoanResponseDto(
 
-@Data
-@Builder
-public class LoanResponseDto {
+    Long loanId,
+    Long userId,
+    String accountNumber,
 
-    private Long loanId;
-    private Long userId;
-    private Long accountId;
+    String loanType,
+    BigDecimal amount,
+    Double interestRate,
+    Integer tenureMonths,
 
-    private String loanType;
-    private BigDecimal amount;
-    private Double interestRate;
-    private Integer tenureMonths;
+    String status
 
-    private String status;
-}
+) {}

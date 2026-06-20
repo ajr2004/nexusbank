@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword()) // The BCrypt hash from your DB
-                .roles(user.getRole().name()) // CUSTOMER or ADMIN [cite: 41]
+                .authorities(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name()))// CUSTOMER or ADMIN [cite: 41]
                 .build();
     }
 }

@@ -1,13 +1,12 @@
 package com.nexusbank.loan_service.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
-@Data
-public class LoanStatusUpdateDto {
+public record LoanStatusUpdateDto(
 
     @NotNull
-    private String status; // APPROVED / REJECTED
+    String status,
 
-    private String remarks; // optional
-}
+    String remarks
+
+) {}

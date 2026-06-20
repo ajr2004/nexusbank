@@ -24,8 +24,8 @@ public class Loan {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
-    private Long accountId; // from banking service
+   @Column(nullable = false, length = 30)
+   private String accountNumber; // from banking service
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;

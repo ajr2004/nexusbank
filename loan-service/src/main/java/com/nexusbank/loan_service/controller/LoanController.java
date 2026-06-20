@@ -8,12 +8,12 @@ import com.nexusbank.loan_service.dto.LoanStatusUpdateDto;
 import com.nexusbank.loan_service.dto.UserDto;
 import com.nexusbank.loan_service.service.LoanService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,56 +24,93 @@ public class LoanController {
     private final LoanService loanService;
     private final IdentityClient identityClient;
 
-    // 1️⃣ Apply Loan
+    // =========================================
+    // 1️⃣ APPLY LOAN
+    // =========================================
     @PostMapping
     public LoanResponseDto applyLoan(
+
             @Valid @RequestBody LoanRequestDto request,
-            @RequestHeader("Authorization") String token) {
 
-        UserDto user = identityClient.getCurrentUser(token);
+            @RequestHeader("Authorization")
+            String token) {
 
-        return loanService.applyLoan(request, user.getId());
+        UserDto user =
+                identityClient.getCurrentUser(token);
+
+        return loanService.applyLoan(
+                request,
+                user.id()
+        );
     }
 
-    // 2️⃣ Get all loans of logged-in user
+    // =========================================
+    // 2️⃣ GET MY LOANS
+    // =========================================
     @GetMapping("/me")
     public List<LoanResponseDto> getMyLoans(
-            @RequestHeader("Authorization") String token) {
 
-        UserDto user = identityClient.getCurrentUser(token);
+            @RequestHeader("Authorization")
+            String token) {
 
-        return loanService.getLoansByUser(user.getId());
+        return loanService.getLoansByUsername(token);
     }
 
-    // 3️⃣ Get single loan
+    // =========================================
+    // 3️⃣ GET SINGLE LOAN
+    // =========================================
     @GetMapping("/{loanId}")
     public LoanResponseDto getLoan(
+
             @PathVariable Long loanId,
-            @RequestHeader("Authorization") String token) {
 
-        UserDto user = identityClient.getCurrentUser(token);
+            @RequestHeader("Authorization")
+            String token) {
 
-        return loanService.getLoan(loanId, user.getId());
+        UserDto user =
+                identityClient.getCurrentUser(token);
+
+        return loanService.getLoan(
+                loanId,
+                user.id()
+        );
     }
 
-    // 4️⃣ Get EMI schedule
+    // =========================================
+    // 4️⃣ GET EMI SCHEDULE
+    // =========================================
     @GetMapping("/{loanId}/emis")
     public List<EmiDto> getEmis(
+
             @PathVariable Long loanId,
-            @RequestHeader("Authorization") String token) {
 
-        UserDto user = identityClient.getCurrentUser(token);
+            @RequestHeader("Authorization")
+            String token) {
 
-        return loanService.getEmis(loanId, user.getId());
+        UserDto user =
+                identityClient.getCurrentUser(token);
+
+        return loanService.getEmis(
+                loanId,
+                user.id()
+        );
     }
 
-    // 5️⃣ Admin: Update Loan Status
+    // =========================================
+    // 5️⃣ ADMIN UPDATE LOAN STATUS
+    // =========================================
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{loanId}/status")
     public String updateLoanStatus(
+
             @PathVariable Long loanId,
+
             @RequestBody LoanStatusUpdateDto request) {
 
-        loanService.updateLoanStatus(loanId, request.getStatus());
+        loanService.updateLoanStatus(
+                loanId,
+                request.status()
+        );
 
         return "Loan status updated successfully";
     }

@@ -1,12 +1,10 @@
 package com.nexusbank.identity_service.dto;
 
-import lombok.Data;
+public record UserDto(
 
-@Data
-public class UserDto {
+    Long id,
+    String username,
+    String email,
+    String role
 
-    private Long id;
-    private String username;
-    private String email;
-    private String role;
-}
+) {}
