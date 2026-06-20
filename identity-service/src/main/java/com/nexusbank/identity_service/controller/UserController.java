@@ -28,12 +28,10 @@ public class UserController {
     private final JwtService jwtService;
 
     // ✅ Register User
-    @PostMapping
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
-
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> registerUser(@RequestBody User user) {
         User savedUser = userService.registerUser(user);
-
-        return ResponseEntity.ok(savedUser);
+        return ResponseEntity.ok(new UserDto(savedUser.getUserId(), savedUser.getName(), savedUser.getEmail(), savedUser.getRole().name()));
     }
 
     // ✅ Login
@@ -71,12 +69,12 @@ public class UserController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserDto dto = new UserDto();
-
-        dto.setId(user.getUserId());
-        dto.setUsername(user.getName());
-        dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole().name());
+        UserDto dto = new UserDto(
+                user.getUserId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name()
+        );
 
         return dto;
     }

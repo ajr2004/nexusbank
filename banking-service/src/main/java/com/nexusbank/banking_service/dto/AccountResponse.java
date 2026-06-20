@@ -3,7 +3,10 @@ package com.nexusbank.banking_service.dto;
 import java.math.BigDecimal;
 
 public record AccountResponse(
+
+    Long accountId,
     String accountNumber,
-    BigDecimal balance,
-    String accountType
+    String accountType,
+    BigDecimal balance
+
 ) {}

@@ -1,43 +1,42 @@
 package com.nexusbank.banking_service.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.nexusbank.banking_service.client.IdentityClient;
+import com.nexusbank.banking_service.dto.TransactionResponseDto;
 import com.nexusbank.banking_service.dto.TransferRequest;
+import com.nexusbank.banking_service.dto.UserDto;
 import com.nexusbank.banking_service.model.Account;
 import com.nexusbank.banking_service.model.Transaction;
 import com.nexusbank.banking_service.repository.AccountRepository;
 import com.nexusbank.banking_service.repository.TransactionRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-
-    public TransactionService(
-            AccountRepository accountRepository,
-            TransactionRepository transactionRepository) {
-
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
-    }
+    private final IdentityClient identityClient;
 
     @Transactional
     public void transferFunds(TransferRequest request) {
 
         // 1. Fetch source account
         Account sourceAccount = accountRepository
-                .findByAccountNumber(request.fromAccountNumber())
+                .findByAccountNumberWithLock(request.fromAccountNumber())
                 .orElseThrow(() ->
                         new RuntimeException("Source account not found!"));
 
         // 2. Fetch target account
         Account targetAccount = accountRepository
-                .findByAccountNumber(request.toAccountNumber())
+                .findByAccountNumberWithLock(request.toAccountNumber())
                 .orElseThrow(() ->
                         new RuntimeException("Target account not found!"));
 
@@ -86,9 +85,63 @@ public class TransactionService {
                 .timestamp(LocalDateTime.now())
                 .build();
 
+        Transaction creditRecord = Transaction.builder()
+                .amount(request.amount())
+                .type(Transaction.TransactionType.CREDIT)
+                .category(request.category() != null ? request.category() : "General Transfer")
+                .description("Transfer inbound from " + sourceAccount.getAccountNumber())
+                .account(targetAccount)
+                .targetAccountNumber(sourceAccount.getAccountNumber())
+                .build();
+
+transactionRepository.save(creditRecord); // Save alongside debitRecord
+
         // 6. Save everything
         accountRepository.save(sourceAccount);
         accountRepository.save(targetAccount);
         transactionRepository.save(debitRecord);
     }
+
+    public List<TransactionResponseDto> getTransactionsByAccount(
+                Long accountId,
+                String token
+        ) {
+
+        // ✅ Get logged-in user
+        UserDto user =
+                identityClient.getCurrentUser(token);
+
+        // ✅ Fetch account
+        Account account = accountRepository
+                .findById(accountId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Account not found"
+                        ));
+
+        // ✅ Ownership validation
+        if (!account.getUserId().equals(user.id())) {
+
+                throw new RuntimeException(
+                        "Unauthorized access to account"
+                );
+        }
+
+        // ✅ Return transactions
+        return transactionRepository
+        .findByAccount_AccountId(accountId)
+        .stream()
+        .map(transaction -> new TransactionResponseDto(
+
+                transaction.getTransactionId(),
+                transaction.getAmount(),
+                transaction.getType().name(),
+                transaction.getCategory(),
+                transaction.getDescription(),
+                transaction.getTargetAccountNumber(),
+                transaction.getTimestamp()
+
+        ))
+        .toList();
+        }
 }
